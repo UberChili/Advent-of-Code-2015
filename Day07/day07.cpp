@@ -33,6 +33,7 @@ std::string contains_operation_instruction(std::vector<std::string> line) {
             return search_words[i];
         }
     }
+    return "No operation instruction found\n";
 }
 
 
@@ -58,10 +59,15 @@ int main(int argc, char *argv[]){
         // std::getline(input, line);
 
         std::string line;
+        std::vector<std::string> splitted_line;
         std::map<std::string, unsigned short> identifiers;
         while (std::getline(input, line)) {
             // std::cout << line << " ";
 
+            splitted_line = split(line);
+            if (contains_operation_instruction(split(line)) == "NOT") {
+                std::cout << "Found: NOT\n";
+            }
         }
 
         // unsigned short x = 123;
