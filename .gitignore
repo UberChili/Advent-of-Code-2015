@@ -1,0 +1,7 @@
+*.out
+*.exe
+*.txt
+!example.txt
+!compile_flags.txt
+!*.cpp
+!*.cc
