@@ -22,6 +22,7 @@ std::vector<std::string> split(std::string line) {
 
 // Checks if the line contains an operation instruction, input must be the splitted string (a vector)
 // Still need to decide what this thing will return; either a bool or a std::string aren't enough
+// Or are they?
 std::string contains_operation_instruction(std::vector<std::string> line) {
     std::vector<std::string> search_words = {"AND", "OR", "LSHIFT", "RSHIFT", "NOT"};
 
