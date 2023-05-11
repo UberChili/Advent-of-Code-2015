@@ -1,6 +1,6 @@
 #include <algorithm>
+#include <cstring>
 #include <iostream>
-#include <iomanip>
 #include <fstream>
 #include <map>
 #include <sstream>
@@ -26,23 +26,43 @@ std::vector<std::string> split(std::string line) {
 std::string contains_operation_instruction(std::vector<std::string> line) {
     std::vector<std::string> search_words = {"AND", "OR", "LSHIFT", "RSHIFT", "NOT"};
 
-    for (int i = 0, n = search_words.size(); i < n; i++) {
-        auto it = std::find(line.begin(), line.end(), search_words[i]);
+    for (auto& word : line) {
+        auto it = std::find(search_words.begin(), search_words.end(), word);
 
-        if (it != line.end()) {
-            // std::cout << "Instruction found: " << search_words[i] << std::endl;
-            return search_words[i];
+        if (it != search_words.end()) {
+            return word;
+            // std::cout << "Instruction found: " << word << std::endl;;
         }
     }
-    return "No operation instruction found\n";
+
+    return "NA";
 }
 
 
-void check_and_apply(std::map<std::string, unsigned short> map, std::vector<std::string> line) {
+void check_and_apply(std::map<std::string, unsigned short> &map, std::vector<std::string> line) {
+    // map.insert_or_assign(line.back(), 1);
 
-    map[line.back()] = 0;
+    if (contains_operation_instruction(line) == "AND") {
+        // map.insert_or_assign(line.back(), map[line[0]] & map[line[2]]);
+        map[line.back()] = map[line[0]] & map[line[2]];
+    }
+    else if (contains_operation_instruction(line) == "OR") {
+        // map.insert_or_assign(line.back(), map[line[0]] | map[line[2]]);
+        map[line.back()] = map[line[0]] | map[line[2]];
+    }
+    else if (contains_operation_instruction(line) == "LSHIFT") {
+        // map.insert_or_assign(line.back(), map[line[0]] << std::stoi(line[2]));
+        map[line.back()] = map[line[0]] << std::stoi(line[2]);
+    }
+    else if (contains_operation_instruction(line) == "RSHIFT") {
+        // map.insert_or_assign(line.back(), map[line[0]] >> std::stoi(line[2]));
+        map[line.back()] = map[line[0]] >> std::stoi(line[2]);
+    }
+    else if (contains_operation_instruction(line) == "NOT") {
+        // map.insert_or_assign(line.back(), ~map[line[1]]);
+        map[line.back()] = ~map[line[1]];
+    }
 
-    return;
 }
 
 int main(int argc, char *argv[]){
@@ -66,9 +86,16 @@ int main(int argc, char *argv[]){
             // std::cout << line << " ";
 
             splitted_line = split(line);
-            if (contains_operation_instruction(split(line)) == "NOT") {
-                std::cout << "Found: NOT\n";
-            }
+            check_and_apply(identifiers, splitted_line);
+            // std::cout << "Found: " << contains_operation_instruction(splitted_line) << std::endl;
+            // if (contains_operation_instruction(split(line)) != "NA") {
+            //     std::cout << "Found: NOT\n";
+            // }
+        }
+
+        for (const auto& [key, value] : identifiers) {
+            // std::cout << '[' << key << "] = " << value << "; ";
+            std::cout << '[' << key << "] = " << value << std::endl;
         }
 
         // unsigned short x = 123;
