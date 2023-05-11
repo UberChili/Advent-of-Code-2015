@@ -37,34 +37,146 @@ std::string contains_operation_instruction(std::vector<std::string> line) {
     return "NA";
 }
 
-// Uses the function 'contains_operation_instruction' on each line (line must be splitted beforehand)
-// Then, it updates the map according to the operation found in the line
-void check_and_apply(std::map<std::string, unsigned short> &map, std::vector<std::string> line) {
-    if (contains_operation_instruction(line) == "AND") {
-        map.insert_or_assign(line.back(), map[line[0]] & map[line[2]]);
+void AND(std::map<std::string, unsigned short>& map, std:: vector<std::string>& instruction) {
+    unsigned short left;
+    unsigned short right;
+
+    try {
+        left = static_cast<unsigned short>(std::stoul(instruction[0]));
+        if (map.contains(instruction[2])) {
+            right = map[instruction[2]];
+        }
+        else {
+            map[instruction.back()] = left;
+            return;
+        }
+    } catch (const std::invalid_argument& e) {
+        if (map.contains(instruction[0])) {
+            left = map[instruction[0]];
+        }
+        else {
+            if (map.contains(instruction[2])) {
+                left = map[instruction[2]];
+            }
+        }
+
+        if (map.contains(instruction[2])) {
+            right = map[instruction[2]];
+        }
     }
-    else if (contains_operation_instruction(line) == "OR") {
-        map.insert_or_assign(line.back(), map[line[0]] | map[line[2]]);
+    map[instruction.back()] = left & right;
+}
+
+void OR(std::map<std::string, unsigned short>& map, std:: vector<std::string>& instruction) {
+    unsigned short left;
+    unsigned short right;
+
+    if (map.contains(instruction[0])) {
+        left = map[instruction[0]];
     }
-    else if (contains_operation_instruction(line) == "LSHIFT") {
-        map.insert_or_assign(line.back(), map[line[0]] << std::stoi(line[2]));
+    if (map.contains(instruction[2])) {
+        right = map[instruction[2]];
     }
-    else if (contains_operation_instruction(line) == "RSHIFT") {
-        map.insert_or_assign(line.back(), map[line[0]] >> std::stoi(line[2]));
+    else if (!map.contains(instruction[0])) {
+        left = right;
     }
-    else if (contains_operation_instruction(line) == "NOT") {
-        map.insert_or_assign(line.back(), ~map[line[1]]);
+    else if (!map.contains(instruction[2])) {
+        right = left;
+    }
+
+    map[instruction.back()] = left | right;
+}
+
+void LSHIFT(std::map<std::string, unsigned short>& map, std:: vector<std::string>& instruction) {
+    unsigned short left;
+    unsigned short right = static_cast<unsigned short>(std::stoul(instruction[2]));
+
+    if (map.contains(instruction[0])) {
+        left = map[instruction[0]];
     }
     else {
-        try {
-            unsigned short num = std::stoi(line[0]);
-            map.insert_or_assign(line.back(), num);
-        } catch (const std::invalid_argument& e) {
-            map.insert_or_assign(line.back(), map[line[0]]);
+        left = 1;
+    }
+    map[instruction.back()] = left << right;
+
+    // map.insert_or_assign(instruction.back(), map[instruction[0]] | map[instruction[2]]);
+}
+
+void RSHIFT(std::map<std::string, unsigned short>& map, std:: vector<std::string>& instruction) {
+    unsigned short left;
+    unsigned short right = static_cast<unsigned short>(std::stoul(instruction[2]));
+
+    if (map.contains(instruction[0])) {
+        left = map[instruction[0]];
+    }
+    else {
+        left = 1;
+    }
+    map[instruction.back()] = left >> right;
+}
+
+void NOT(std::map<std::string, unsigned short>& map, std:: vector<std::string>& instruction) {
+    unsigned short right;
+
+    if (map.contains(instruction[1])) {
+        right = map[instruction[1]];
+    }
+    map[instruction.back()] = ~map[instruction[1]];
+}
+
+void ASSIGN(std::map<std::string, unsigned short>& map, std:: vector<std::string>& instruction) {
+    unsigned short left;
+
+    try {
+        left = static_cast<unsigned short>(std::stoul(instruction[0]));
+        map[instruction.back()] = left;
+    } catch (const std::invalid_argument& e) {
+        if (map.contains(instruction[0])) {
+            map[instruction.back()] = map[instruction[0]];
         }
+    }
+}
+
+// Uses the function 'contains_operation_instruction' on each line (line must be splitted beforehand)
+// Then, it updates the map according to the operation found in the line
+void check_and_apply(std::map<std::string, unsigned short>& map, std::vector<std::string> line) {
+    if (contains_operation_instruction(line) == "AND") {
+        AND(map, line);
+        // map.insert_or_assign(line.back(), map[line[0]] & map[line[2]]);
+    }
+    else if (contains_operation_instruction(line) == "OR") {
+        OR(map, line);
+        // map.insert_or_assign(line.back(), map[line[0]] | map[line[2]]);
+    }
+    else if (contains_operation_instruction(line) == "LSHIFT") {
+        LSHIFT(map, line);
+        // map[line.back()] = map[line[0]] << static_cast<unsigned short>(std::stoul(line[2]));
+        // map.insert_or_assign(line.back(), map[line[0]] << static_cast<unsigned short>(std::stoul(line[2])));
+    }
+    else if (contains_operation_instruction(line) == "RSHIFT") {
+        RSHIFT(map, line);
+        // map[line.back()] = map[line[0]] >> static_cast<unsigned short>(std::stoul(line[2]));
+        // map.insert_or_assign(line.back(), map[line[0]] >> static_cast<unsigned short>(std::stoul(line[2])));
+    }
+    else if (contains_operation_instruction(line) == "NOT") {
+        NOT(map, line);
+        // map[line.back()] = ~map[line[1]];
+        // map.insert_or_assign(line.back(), ~map[line[1]]);
+    }
+    else {
+        ASSIGN(map, line);
+        // try {
+        //     unsigned short num = static_cast<unsigned short>(std::stoul(line[0]));
+        //     map[line.back()] = num;
+        //     // map.insert_or_assign(line.back(), num);
+        // } catch (const std::invalid_argument& e) {
+        //     map[line.back()] = map[line[0]];
+        //     // map.insert_or_assign(line.back(), map[line[0]]);
+        // }
     }
 
 }
+
 
 int main(int argc, char *argv[]){
     if (argc != 2) {
@@ -109,6 +221,7 @@ int main(int argc, char *argv[]){
         // std::cout << "d: " << d << "e: " << e << "f: " << f << "g: " << g << "h: " << h << "i: " << i << "x: " << x << "y: " << y << std::endl;
 
         std::cout << "[a] = " << identifiers["a"] << std::endl;
+        std::cout << "[b] = " << identifiers["b"] << std::endl;
         input.close();
     }
     else {
