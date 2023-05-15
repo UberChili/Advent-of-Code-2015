@@ -2,11 +2,32 @@
 #include <cstring>
 #include <iostream>
 #include <fstream>
+#include <string>
 #include <unordered_map>
 #include <sstream>
 #include <stdexcept>
 #include <utility>
 #include <vector>
+
+
+struct instructions_obj {
+    std::vector<std::string> command_and_args;
+    std::string dest_wire;
+};
+
+
+unsigned short isnumber(std::vector<std::string> line) {
+    try {
+        unsigned short num = static_cast<unsigned short>(std::stoul(line[0]));
+        return num;
+    }
+    catch (const std::out_of_range& e) {
+        return false;
+    }
+    catch (const std::invalid_argument& e) {
+        return false;
+    }
+}
 
 
 std::vector<std::string> split(std::string line) {
@@ -37,40 +58,21 @@ std::string contains_operation_instruction(std::vector<std::string> line) {
     return "NA";
 }
 
-void fill_map(std::unordered_map<std::string, std::vector<std::string>>& map, std::vector<std::string> line) {
 
-    if (contains_operation_instruction(line) == "AND") {
-       auto split_it = std::find(line.begin(), line.end(), "->");
-       std::vector<std::string> instruction(line.begin(), split_it);
+unsigned short get_signal(std::unordered_map<std::string, instructions_obj>& map, std::string key) {
+    // check if value of key is number
+    // return if so
+    unsigned short signal;
 
-       map[line.back()] = instruction;
-    }
-    else if (contains_operation_instruction(line) == "OR") {
-       auto split_it = std::find(line.begin(), line.end(), "->");
-       std::vector<std::string> instruction(line.begin(), split_it);
 
-       map[line.back()] = instruction;
-    }
-    else if (contains_operation_instruction(line) == "LSHIFT") {
-       auto split_it = std::find(line.begin(), line.end(), "->");
-       std::vector<std::string> instruction(line.begin(), split_it);
+    return 0;
+}
 
-       map[line.back()] = instruction;
-    }
-    else if (contains_operation_instruction(line) == "RSHIFT") {
-       auto split_it = std::find(line.begin(), line.end(), "->");
-       std::vector<std::string> instruction(line.begin(), split_it);
 
-       map[line.back()] = instruction;
-    }
-    else if (contains_operation_instruction(line) == "NOT") {
-       auto split_it = std::find(line.begin(), line.end(), "->");
-       std::vector<std::string> instruction(line.begin(), split_it);
-
-       map[line.back()] = instruction;
-    }
-    else {
-    }
+void add_to_map(std::unordered_map<std::string, instructions_obj>& map, std::vector<std::string> line) {
+    auto split_it = std::find(line.begin(), line.end(), "->");
+    std::vector<std::string> instruction(line.begin(), split_it);
+    map[line.back()] = instructions_obj{instruction, line.back()};
 }
 
 
@@ -90,13 +92,23 @@ int main(int argc, char *argv[]){
 
         std::string line;
         std::vector<std::string> splitted_line;
-        std::unordered_map<std::string, std::vector<std::string>> wires;
+        // std::unordered_map<std::string, std::vector<std::string>> wires;
+        std::unordered_map<std::string, instructions_obj> wires;
 
         while (std::getline(input, line)) {
             // std::cout << line << " ";
 
             splitted_line = split(line);
+            add_to_map(wires, splitted_line);
         }
+
+        // for (const auto& [key, value] : wires) {
+        //     std::cout << key << ": ";
+        //     for (const auto& i : value.command_and_args) {
+        //         std:: cout << i << " ";
+        //     }
+        //     std::cout << std::endl;
+        // }
 
         // for (const auto& [key, value] : wires) {
         //     // Printing it out just for testing
