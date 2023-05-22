@@ -7,13 +7,14 @@
 #include <stdexcept>
 #include <vector>
 
+using std::istringstream;
 
 struct instructions_obj {
-    // std::vector<std::string> command_and_args;
-    std::vector<std::string> args;
-    std::string operation;
-    unsigned short value;
-    std::string wire;
+  // std::vector<std::string> command_and_args;
+  std::vector<std::string> args;
+  std::string operation;
+  unsigned short value;
+  std::string wire;
 };
 
 
@@ -35,7 +36,7 @@ bool isnumber(std::string string) {
 // splits a string by whitespaces and returns a vector of strings
 std::vector<std::string> split(std::string line) {
     std::vector<std::string> tokens;
-    std::istringstream iss(line);
+    istringstream iss(line);
     std::string token;
 
 
