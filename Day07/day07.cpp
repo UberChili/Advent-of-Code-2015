@@ -19,18 +19,33 @@ struct instructions_obj {
 
 
 // bool isnumber(std::vector<std::string> line) {
-bool isnumber(std::string string) {
-    try {
-        unsigned short num = static_cast<unsigned short>(std::stoul(string));
-        return true;
-    }
-    catch (const std::out_of_range& e) {
+bool isnumber(const std::string& str) {
+    // Check if the string is empty
+    if (str.empty())
         return false;
+
+    // Iterate over each character in the string
+    for (char c : str) {
+        // Check if the character is not a digit
+        if (!std::isdigit(c))
+            return false;
     }
-    catch (const std::invalid_argument& e) {
-        return false;
-    }
+
+    // If all characters are digits, the string is a number
+    return true;
 }
+// bool isnumber(std::string string) {
+//     try {
+//         unsigned short num = static_cast<unsigned short>(std::stoul(string));
+//         return true;
+//     }
+//     catch (const std::out_of_range& e) {
+//         return false;
+//     }
+//     catch (const std::invalid_argument& e) {
+//         return false;
+//     }
+// }
 
 
 // splits a string by whitespaces and returns a vector of strings
@@ -60,112 +75,78 @@ std::string contains_operation_instruction(std::vector<std::string> line) {
         }
     }
 
-    return "NA";
+    return "->";
+}
+
+void add_to_map(std::unordered_map<std::string, instructions_obj>& map, std::vector<std::string> parsed_line) {
+    std::string operation = contains_operation_instruction(parsed_line);
+    std::vector<std::string> args;
+    unsigned short value;
+    std::string wire = parsed_line.back();
+
+    if (operation == "->") {
+        if (isnumber(parsed_line[0])) {
+            value = static_cast<unsigned short>(std::stoul(parsed_line[0]));
+        }
+    }
+    else if (operation == "NOT") {
+        args.push_back(parsed_line[1]);
+    }
+    else {
+        args.push_back(parsed_line[0]);
+        args.push_back(parsed_line[2]);
+    }
+
+    map[wire] = {args, operation, value, wire};
 }
 
 
 unsigned short get_signal(std::unordered_map<std::string, instructions_obj>& map, std::string key) {
-    // Just using this "auxiliary" vector to make it easier to write this portion of the code
-    std::vector<std::string> args = map[key].args;
+    std::vector<std::string> args;
 
-    if (map[key].value != 0) {
+    if (map[key].value) {
         return map[key].value;
     }
-    // if (map[key].operation == "->") {
-    //     std::cout << map[key].args[0] << " -> " << key << std::endl;
+    else {
+        args = map[key].args;
 
-    //     if (isnumber(map[key].args[0])) {
-    //         return static_cast<unsigned short>(std::stoul(map[key].args[0]));
-    //     }
-    //     else {
-    //         return get_signal(map, args[0]);
-    //     }
-    // }
+        if (map[key].operation == "AND") {
+            if (isnumber(args[0]))
+                return static_cast<unsigned short>(std::stoul(args[0])) bitand get_signal(map, args[1]);
+            else
+                return get_signal(map, args[0]) bitand get_signal(map, args[1]);
+        }
 
-    else if (map[key].operation == "AND") {
-        unsigned short arg;
-        std::cout << args[0] << " AND " << args[1] << std::endl;
-        if (isnumber(args[0])) {
-            arg = static_cast<unsigned short>(std::stoul(args[0]));
-            return arg & get_signal(map, args[1]);
+        else if (map[key].operation == "OR") {
+            return get_signal(map, args[0]) bitor get_signal(map, args[1]);
         }
-        else {
-            return get_signal(map, args[0]) & get_signal(map, args[1]);
+
+        else if (map[key].operation == "LSHIFT") {
+            unsigned short left = get_signal(map, args[0]);
+            unsigned short right;
+
+            if (isnumber(args[1])) {
+                right = static_cast<unsigned short>(std::stoul(args[1]));
+            }
+            return left << right;
         }
-    }
-    else if (map[key].operation == "OR") {
-        std::cout << map[key].operation << " " << map[key].args[0] << " " << map[key].args[1] << std::endl;
-        return get_signal(map, args[0]) | get_signal(map, args[1]);
-    }
-    else if (map[key].operation == "LSHIFT") {
-        std::cout << args[0] << " LSHIFT " << args[1] << std::endl;
-        unsigned short arg = static_cast<unsigned short>(std::stoul(args[1]));
-        return get_signal(map, args[0]) << arg;
-    }
-    else if (map[key].operation == "RSHIFT") {
-        std::cout << args[0] << " RSHIFT " << args[1] << std::endl;
-        unsigned short arg = static_cast<unsigned short>(std::stoul(args[1]));
-        return (get_signal(map, args[0]) >> arg);
-    }
-    else if (map[key].operation == "NOT") {
-        std::cout << "NOT " << args[0];
-        return ~get_signal(map, args[0]);
+
+        else if (map[key].operation == "RSHIFT") {
+            unsigned short left = get_signal(map, args[0]);
+            unsigned short right;
+
+            if (isnumber(args[1])) {
+                right = static_cast<unsigned short>(std::stoul(args[1]));
+            }
+            return left >> right;
+        }
+
+        else if (map[key].operation == "NOT") {
+            return ~get_signal(map, args[0]);
+        }
     }
 
     return 0;
-}
-
-
-void add_to_map(std::unordered_map<std::string, instructions_obj>& map, std::vector<std::string> line) {
-    auto split_it = std::find(line.begin(), line.end(), "->");
-    std::vector<std::string> instruction(line.begin(), split_it);
-
-    if (contains_operation_instruction(instruction) == "AND") {
-        std::string operation = "AND";
-        std::erase(instruction, "AND");
-        std::string wire = line.back();
-        map[wire] = instructions_obj{instruction, operation, 0, wire};
-    }
-    else if (contains_operation_instruction(instruction) == "OR") {
-        std::string operation = "OR";
-        std::erase(instruction, "OR");
-        std::string wire = line.back();
-        map[wire] = instructions_obj{instruction, operation, 0, wire};
-    }
-    else if (contains_operation_instruction(instruction) == "LSHIFT") {
-        std::string operation = "LSHIFT";
-        std::erase(instruction, "LSHIFT");
-        std::string wire = line.back();
-        map[wire] = instructions_obj{instruction, operation, 0, wire};
-    }
-    else if (contains_operation_instruction(instruction) == "RSHIFT") {
-        std::string operation = "RSHIFT";
-        std::erase(instruction, "RSHIFT");
-        std::string wire = line.back();
-        map[wire] = instructions_obj{instruction, operation, 0, wire};
-    }
-    else if (contains_operation_instruction(instruction) == "NOT") {
-        std::string operation = "NOT";
-        std::erase(instruction, "NOT");
-        std::string wire = line.back();
-        map[wire] = instructions_obj{instruction, operation, 0, wire};
-    }
-    else {
-        std::string operation = "->";
-        std::erase(instruction, "->");
-        std::string wire = line.back();
-        if (isnumber(line[0])) {
-            unsigned short value = static_cast<unsigned short>(std::stoul(line[0]));
-            map[wire] = instructions_obj{instruction, operation, value, wire};
-        }
-        else {
-            map[wire] = instructions_obj{instruction, operation, 0, wire};
-        }
-    }
-    // backup
-    // auto split_it = std::find(line.begin(), line.end(), "->");
-    // std::vector<std::string> instruction(line.begin(), split_it);
-    // map[line.back()] = instructions_obj{instruction, line.back()};
 }
 
 
@@ -178,7 +159,6 @@ int main(int argc, char *argv[]){
     std::ifstream input;
     input.open(argv[1]);
 
-    int counter = 0;
     if (input.is_open()) {
         // std::string line;
         // std::getline(input, line);
@@ -195,28 +175,16 @@ int main(int argc, char *argv[]){
             add_to_map(wires, splitted_line);
         }
 
-        // for (const auto& [key, value] : wires) {
-        //     std::cout << key << ": " << "Op: " << value.operation << " " << "Args: ";
-        //     for (const auto& i : value.args) {
-        //         std:: cout << i << " ";
-        //     }
-        //     std::cout << std::endl;
-        // }
 
-        std::cout << "Wire a: " << get_signal(wires, "a") << std::endl;
-
-        // for (const auto& [key, value] : wires) {
-        //     std::cout << key << ": ";
-        //     for (const auto& i : value.command_and_args) {
-        //         std:: cout << i << " ";
-        //     }
-        //     std::cout << std::endl;
-        // }
-
-        // for (const auto& [key, value] : wires) {
-        //     // Printing it out just for testing
-        //     std::cout << '[' << key << "] = " << value << std::endl;
-        // }
+        for (const auto& [key, value] : wires) {
+            std::cout << key << ": Args: ";
+            // std::cout << key << ": " << "Op: " << value.operation << " " << "Args: " << " Value: " << value.value;
+            for (const auto& i : value.args) {
+                std:: cout << i << " ";
+            }
+            std::cout << "Op: " << value.operation << " Value: " << value.value << std::endl;
+        }
+        std::cout << "Value of given key: " << get_signal(wires, "a") << std::endl;
 
         // The following was just to understand bitwise operations, because I was a little unsure
         // (I started testing with ints, learning why that was incorrect and why we should use unsigned shorts instead)
@@ -230,6 +198,16 @@ int main(int argc, char *argv[]){
         // unsigned short h = ~x;
         // unsigned short i = ~y;
         // std::cout << "d: " << d << "e: " << e << "f: " << f << "g: " << g << "h: " << h << "i: " << i << "x: " << x << "y: " << y << std::endl;
+
+        unsigned short x = 123;
+        unsigned short y = 456;
+        unsigned short d = x bitand y;
+        unsigned short e = x bitor y;
+        unsigned short f = x << 2;
+        unsigned short g = y >> 2;
+        unsigned short h = compl x;
+        unsigned short i = compl y;
+        std::cout << "d: " << d << "e: " << e << "f: " << f << "g: " << g << "h: " << h << "i: " << i << "x: " << x << "y: " << y << std::endl;
 
         input.close();
     }
