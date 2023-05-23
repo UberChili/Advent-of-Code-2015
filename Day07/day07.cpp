@@ -10,11 +10,11 @@
 using std::istringstream;
 
 struct instructions_obj {
-  // std::vector<std::string> command_and_args;
-  std::vector<std::string> args;
-  std::string operation;
-  unsigned short value;
-  std::string wire;
+    bool has_value {false};
+    std::vector<std::string> args;
+    std::string operation;
+    unsigned short value;
+    std::string wire;
 };
 
 
@@ -78,83 +78,153 @@ std::string contains_operation_instruction(std::vector<std::string> line) {
     return "->";
 }
 
+
 void add_to_map(std::unordered_map<std::string, instructions_obj>& map, std::vector<std::string> parsed_line) {
     std::string operation = contains_operation_instruction(parsed_line);
     std::vector<std::string> args;
     unsigned short value;
+    bool has_value;
     std::string wire = parsed_line.back();
 
     if (operation == "->") {
         if (isnumber(parsed_line[0])) {
             value = static_cast<unsigned short>(std::stoul(parsed_line[0]));
+            has_value = true;
+        }
+        else {
+            value = 0;
+            args.push_back(parsed_line[0]);
         }
     }
     else if (operation == "NOT") {
         args.push_back(parsed_line[1]);
+        value = 0;
     }
     else {
         args.push_back(parsed_line[0]);
         args.push_back(parsed_line[2]);
+        value = 0;
     }
 
-    map[wire] = {args, operation, value, wire};
+    map[wire] = {has_value, args, operation, value, wire};
 }
 
 
 unsigned short get_signal(std::unordered_map<std::string, instructions_obj>& map, std::string key) {
+    std::string op;
     std::vector<std::string> args;
 
-    if (map[key].value) {
-        return map[key].value;
+    if (auto search = map.find(key); search != map.end()) {
+        if (search->second.has_value == true && search->second.operation == "->") {
+            return search->second.value;
+        }
+        else {
+            args = search->second.args;
+            op = search->second.operation;
+
+            if (op == "->") {
+                return get_signal(map, args[0]);
+            }
+
+            else if (op == "AND") {
+                if (isnumber(args[0]))
+                    return static_cast<unsigned short>(std::stoul(args[0])) bitand get_signal(map, args[1]);
+                else
+                    return get_signal(map, args[0]) bitand get_signal(map, args[1]);
+            }
+
+            else if (op == "OR") {
+                return get_signal(map, args[0]) bitor get_signal(map, args[1]);
+            }
+
+            else if (op == "LSHIFT") {
+                unsigned short left = get_signal(map, args[0]);
+                unsigned short right;
+
+                if (isnumber(args[1])) {
+                    right = static_cast<unsigned short>(std::stoul(args[1]));
+                }
+                return left << right;
+            }
+
+            else if (op == "RSHIFT") {
+                unsigned short left = get_signal(map, args[0]);
+                unsigned short right;
+
+                if (isnumber(args[1])) {
+                    right = static_cast<unsigned short>(std::stoul(args[1]));
+                }
+                return left >> right;
+            }
+
+            else if (op == "NOT") {
+                return ~get_signal(map, args[0]) bitand 0xffff;
+            }
+            return 0;
+        }
     }
     else {
-        args = map[key].args;
-
-        if (map[key].operation == "AND") {
-            if (isnumber(args[0]))
-                return static_cast<unsigned short>(std::stoul(args[0])) bitand get_signal(map, args[1]);
-            else
-                return get_signal(map, args[0]) bitand get_signal(map, args[1]);
-        }
-
-        else if (map[key].operation == "OR") {
-            return get_signal(map, args[0]) bitor get_signal(map, args[1]);
-        }
-
-        else if (map[key].operation == "LSHIFT") {
-            unsigned short left = get_signal(map, args[0]);
-            unsigned short right;
-
-            if (isnumber(args[1])) {
-                right = static_cast<unsigned short>(std::stoul(args[1]));
-            }
-            return left << right;
-        }
-
-        else if (map[key].operation == "RSHIFT") {
-            unsigned short left = get_signal(map, args[0]);
-            unsigned short right;
-
-            if (isnumber(args[1])) {
-                right = static_cast<unsigned short>(std::stoul(args[1]));
-            }
-            return left >> right;
-        }
-
-        else if (map[key].operation == "NOT") {
-            return ~get_signal(map, args[0]);
-        }
+        std::cout << "Not found\n";
+        return 0;
     }
-
-    return 0;
 }
+
+// unsigned short get_signal(std::unordered_map<std::string, instructions_obj>& map, std::string key) {
+//     std::vector<std::string> args;
+
+//     if (map.find(key)) {
+//         return map[key].value;
+//     }
+//     else {
+//         args = map[key].args;
+
+//         if (map[key].operation == "AND") {
+//             if (isnumber(args[0]))
+//                 return static_cast<unsigned short>(std::stoul(args[0])) bitand get_signal(map, args[1]);
+//             else
+//                 return get_signal(map, args[0]) bitand get_signal(map, args[1]);
+//         }
+
+//         else if (map[key].operation == "OR") {
+//             return get_signal(map, args[0]) bitor get_signal(map, args[1]);
+//         }
+
+//         else if (map[key].operation == "LSHIFT") {
+//             unsigned short left = get_signal(map, args[0]);
+//             unsigned short right;
+
+//             if (isnumber(args[1])) {
+//                 right = static_cast<unsigned short>(std::stoul(args[1]));
+//             }
+//             return left << right;
+//         }
+
+//         else if (map[key].operation == "RSHIFT") {
+//             unsigned short left = get_signal(map, args[0]);
+//             unsigned short right;
+
+//             if (isnumber(args[1])) {
+//                 right = static_cast<unsigned short>(std::stoul(args[1]));
+//             }
+//             return left >> right;
+//         }
+
+//         else if (map[key].operation == "NOT") {
+//             return ~get_signal(map, args[0]);
+//         }
+//     }
+
+//     return 0;
+// }
 
 
 int main(int argc, char *argv[]){
-    if (argc != 2) {
-        std::cout << "Usage: ./day06 [input] \n";
+    if (argc != 3) {
+        std::cout << "Usage: ./day06 [input] [key]\n";
         return 1;
     }
+
+    std::string key = argv[2];
 
     std::ifstream input;
     input.open(argv[1]);
@@ -182,9 +252,9 @@ int main(int argc, char *argv[]){
             for (const auto& i : value.args) {
                 std:: cout << i << " ";
             }
-            std::cout << "Op: " << value.operation << " Value: " << value.value << std::endl;
+            std::cout << "Op: " << value.operation << " Has value: " << value.has_value << " Value: " << value.value << std::endl;
         }
-        std::cout << "Value of given key: " << get_signal(wires, "a") << std::endl;
+        std::cout << "Value of " << key << ": "<< get_signal(wires, key) << std::endl;
 
         // The following was just to understand bitwise operations, because I was a little unsure
         // (I started testing with ints, learning why that was incorrect and why we should use unsigned shorts instead)
