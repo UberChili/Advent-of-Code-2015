@@ -1,17 +1,45 @@
 #include <algorithm>
-#include <cstring>
 #include <iostream>
 #include <fstream>
-#include <map>
+#include <format>
+#include <string>
+#include <unordered_map>
 #include <sstream>
 #include <stdexcept>
-#include <utility>
 #include <vector>
 
+using std::istringstream;
 
+
+// Instructions object to store the information about a wire
+struct instructions_obj {
+    bool has_value {false};
+    std::vector<std::string> args;
+    std::string operation;
+    unsigned short value;
+    std::string wire;
+};
+
+
+// Checks if a string is a valid number by traversing all individual characters and calling std::isdigit() on them
+// if all characters are digits, then it is a valid number
+bool isnumber(const std::string& str) {
+    if (str.empty())
+        return false;
+
+    for (char c : str) {
+        if (!std::isdigit(c))
+            return false;
+    }
+
+    return true;
+}
+
+
+// splits a string by whitespaces and returns a vector of strings
 std::vector<std::string> split(std::string line) {
     std::vector<std::string> tokens;
-    std::istringstream iss(line);
+    istringstream iss(line);
     std::string token;
 
 
@@ -21,7 +49,8 @@ std::vector<std::string> split(std::string line) {
     return tokens;
 }
 
-// Checks if the line contains an operation instruction, input must be the splitted string (a vector)
+
+// Checks if the line (a vector of strings) contains an operation instruction
 std::string contains_operation_instruction(std::vector<std::string> line) {
     std::vector<std::string> search_words = {"AND", "OR", "LSHIFT", "RSHIFT", "NOT"};
 
@@ -34,178 +63,162 @@ std::string contains_operation_instruction(std::vector<std::string> line) {
         }
     }
 
-    return "NA";
+    return "->";
 }
 
-void AND(std::map<std::string, unsigned short>& map, std:: vector<std::string>& instruction) {
-    unsigned short left;
-    unsigned short right;
 
-    try {
-        left = static_cast<unsigned short>(std::stoul(instruction[0]));
-        if (map.contains(instruction[2])) {
-            right = map[instruction[2]];
+// Checks the (vec of strs) parsed_line, builds the corresponding instructions_obj and adds it to the map
+void add_to_map(std::unordered_map<std::string, instructions_obj>& map, std::vector<std::string> parsed_line) {
+    std::string operation = contains_operation_instruction(parsed_line);
+    std::vector<std::string> args;
+    unsigned short value;
+    bool has_value = false;
+    std::string wire = parsed_line.back();
+
+    if (operation == "->") {
+        if (isnumber(parsed_line[0])) {
+            value = static_cast<unsigned short>(std::stoul(parsed_line[0]));
+            has_value = true;
         }
         else {
-            map[instruction.back()] = left;
-            return;
+            value = 0;
+            args.push_back(parsed_line[0]);
         }
-    } catch (const std::invalid_argument& e) {
-        if (map.contains(instruction[0])) {
-            left = map[instruction[0]];
+    }
+    else if (operation == "NOT") {
+        args.push_back(parsed_line[1]);
+        value = 0;
+    }
+    else {
+        args.push_back(parsed_line[0]);
+        args.push_back(parsed_line[2]);
+        value = 0;
+    }
+
+    map[wire] = {has_value, args, operation, value, wire};
+}
+
+
+// Recursive function that calculates signals.
+// Searchs for a key in a map, if it exists, checks the operation of the wire and applies said operation to its arguments
+unsigned short get_signal(std::unordered_map<std::string, instructions_obj>& map, std::string key) {
+    std::string op;
+    std::vector<std::string> args;
+
+    if (auto search = map.find(key); search != map.end()) {
+        if (search->second.has_value == true) {
+            return search->second.value;
         }
         else {
-            if (map.contains(instruction[2])) {
-                left = map[instruction[2]];
+            args = search->second.args;
+            op = search->second.operation;
+
+            if (op == "->") {
+                search->second.has_value = true;
+                search->second.value = get_signal(map, args[0]);
+                return search->second.value;
             }
-        }
 
-        if (map.contains(instruction[2])) {
-            right = map[instruction[2]];
-        }
-    }
-    map[instruction.back()] = left & right;
-}
+            else if (op == "AND") {
+                if (isnumber(args[0])) {
+                    search->second.has_value = true;
+                    search->second.value = static_cast<unsigned short>(std::stoul(args[0])) bitand get_signal(map, args[1]);
+                    return search->second.value;
+                }
 
-void OR(std::map<std::string, unsigned short>& map, std:: vector<std::string>& instruction) {
-    unsigned short left;
-    unsigned short right;
+                else {
+                    search->second.has_value = true;
+                    search->second.value = get_signal(map, args[0]) bitand get_signal(map, args[1]);
+                    return search->second.value;
+                }
+            }
 
-    if (map.contains(instruction[0])) {
-        left = map[instruction[0]];
-    }
-    if (map.contains(instruction[2])) {
-        right = map[instruction[2]];
-    }
-    else if (!map.contains(instruction[0])) {
-        left = right;
-    }
-    else if (!map.contains(instruction[2])) {
-        right = left;
-    }
+            else if (op == "OR") {
+                search->second.has_value = true;
+                search->second.value = get_signal(map, args[0]) bitor get_signal(map, args[1]);
+                return search->second.value;
+            }
 
-    map[instruction.back()] = left | right;
-}
+            else if (op == "LSHIFT") {
+                unsigned short left = get_signal(map, args[0]);
+                unsigned short right;
 
-void LSHIFT(std::map<std::string, unsigned short>& map, std:: vector<std::string>& instruction) {
-    unsigned short left;
-    unsigned short right = static_cast<unsigned short>(std::stoul(instruction[2]));
+                if (isnumber(args[1])) {
+                    right = static_cast<unsigned short>(std::stoul(args[1]));
+                }
+                search->second.has_value = true;
+                search->second.value = left << right;
+                return search->second.value;
+            }
 
-    if (map.contains(instruction[0])) {
-        left = map[instruction[0]];
-    }
-    else {
-        left = 1;
-    }
-    map[instruction.back()] = left << right;
+            else if (op == "RSHIFT") {
+                unsigned short left = get_signal(map, args[0]);
+                unsigned short right;
 
-    // map.insert_or_assign(instruction.back(), map[instruction[0]] | map[instruction[2]]);
-}
+                if (isnumber(args[1])) {
+                    right = static_cast<unsigned short>(std::stoul(args[1]));
+                }
+                search->second.has_value = true;
+                search->second.value = left >> right;
+                return search->second.value;
+            }
 
-void RSHIFT(std::map<std::string, unsigned short>& map, std:: vector<std::string>& instruction) {
-    unsigned short left;
-    unsigned short right = static_cast<unsigned short>(std::stoul(instruction[2]));
-
-    if (map.contains(instruction[0])) {
-        left = map[instruction[0]];
-    }
-    else {
-        left = 1;
-    }
-    map[instruction.back()] = left >> right;
-}
-
-void NOT(std::map<std::string, unsigned short>& map, std:: vector<std::string>& instruction) {
-    unsigned short right;
-
-    if (map.contains(instruction[1])) {
-        right = map[instruction[1]];
-    }
-    map[instruction.back()] = ~map[instruction[1]];
-}
-
-void ASSIGN(std::map<std::string, unsigned short>& map, std:: vector<std::string>& instruction) {
-    unsigned short left;
-
-    try {
-        left = static_cast<unsigned short>(std::stoul(instruction[0]));
-        map[instruction.back()] = left;
-    } catch (const std::invalid_argument& e) {
-        if (map.contains(instruction[0])) {
-            map[instruction.back()] = map[instruction[0]];
+            else if (op == "NOT") {
+                search->second.has_value = true;
+                search->second.value = ~get_signal(map, args[0]) bitand 0xffff;
+                return search->second.value;
+            }
+            return 0;
         }
     }
+    else {
+        std::cout << "Not found\n";
+        return 0;
+    }
 }
 
-// Uses the function 'contains_operation_instruction' on each line (line must be splitted beforehand)
-// Then, it updates the map according to the operation found in the line
-void check_and_apply(std::map<std::string, unsigned short>& map, std::vector<std::string> line) {
-    if (contains_operation_instruction(line) == "AND") {
-        AND(map, line);
-        // map.insert_or_assign(line.back(), map[line[0]] & map[line[2]]);
-    }
-    else if (contains_operation_instruction(line) == "OR") {
-        OR(map, line);
-        // map.insert_or_assign(line.back(), map[line[0]] | map[line[2]]);
-    }
-    else if (contains_operation_instruction(line) == "LSHIFT") {
-        LSHIFT(map, line);
-        // map[line.back()] = map[line[0]] << static_cast<unsigned short>(std::stoul(line[2]));
-        // map.insert_or_assign(line.back(), map[line[0]] << static_cast<unsigned short>(std::stoul(line[2])));
-    }
-    else if (contains_operation_instruction(line) == "RSHIFT") {
-        RSHIFT(map, line);
-        // map[line.back()] = map[line[0]] >> static_cast<unsigned short>(std::stoul(line[2]));
-        // map.insert_or_assign(line.back(), map[line[0]] >> static_cast<unsigned short>(std::stoul(line[2])));
-    }
-    else if (contains_operation_instruction(line) == "NOT") {
-        NOT(map, line);
-        // map[line.back()] = ~map[line[1]];
-        // map.insert_or_assign(line.back(), ~map[line[1]]);
+
+//  Pretty much just a little debugging, or 'pretty printing' function. Has no use in the actual functionality of the program
+void get_value_from_map(std::unordered_map<std::string, instructions_obj>& map, std::string key) {
+    if (map.contains(key)) {
+        std::cout << std::format("{}: {}\t Value: {}\n Operation: {}\n Args: ", key, map.at(key).has_value, map.at(key).value, map.at(key).operation);
+        for (const auto& arg : map.at(key).args) {
+            std::cout << arg << " ";
+        }
+        std::cout << std::endl;
     }
     else {
-        ASSIGN(map, line);
-        // try {
-        //     unsigned short num = static_cast<unsigned short>(std::stoul(line[0]));
-        //     map[line.back()] = num;
-        //     // map.insert_or_assign(line.back(), num);
-        // } catch (const std::invalid_argument& e) {
-        //     map[line.back()] = map[line[0]];
-        //     // map.insert_or_assign(line.back(), map[line[0]]);
-        // }
+        std::cout << std::format("{} Not found in map\n", key);
+        return;
     }
-
 }
 
 
 int main(int argc, char *argv[]){
-    if (argc != 2) {
-        std::cout << "Usage: ./day06 [input] \n";
+    if (argc != 3) {
+        std::cout << "Usage: ./day07 [input] [key]\n";
         return 1;
     }
+
+    std::string key = argv[2];
 
     std::ifstream input;
     input.open(argv[1]);
 
-    int counter = 0;
     if (input.is_open()) {
-        // std::string line;
-        // std::getline(input, line);
-
         std::string line;
         std::vector<std::string> splitted_line;
-        std::map<std::string, unsigned short> identifiers;
+        std::unordered_map<std::string, instructions_obj> wires;
+
         while (std::getline(input, line)) {
             // std::cout << line << " ";
 
             splitted_line = split(line);
-            check_and_apply(identifiers, splitted_line);
+            add_to_map(wires, splitted_line);
         }
 
-        for (const auto& [key, value] : identifiers) {
-            // Printing it out just for testing
-            std::cout << '[' << key << "] = " << value << std::endl;
-        }
+        // get_value_from_map(wires, key);
+        std::cout << "Value of " << key << ": "<< get_signal(wires, key) << std::endl;
 
         // The following was just to understand bitwise operations, because I was a little unsure
         // (I started testing with ints, learning why that was incorrect and why we should use unsigned shorts instead)
@@ -220,8 +233,6 @@ int main(int argc, char *argv[]){
         // unsigned short i = ~y;
         // std::cout << "d: " << d << "e: " << e << "f: " << f << "g: " << g << "h: " << h << "i: " << i << "x: " << x << "y: " << y << std::endl;
 
-        std::cout << "[a] = " << identifiers["a"] << std::endl;
-        std::cout << "[b] = " << identifiers["b"] << std::endl;
         input.close();
     }
     else {
