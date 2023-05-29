@@ -7,7 +7,5 @@ I still try to solve as many as I can because it is fun and it is a good tool fo
 
 So because I am but a C++ newbie, and not a particularly exceptional programmer, code in here could be ugly, unoptimized or at sometimes, just dumb. Please be understanding.
 
-### Update 14 May
-So far, Day 7 has been giving me the most trouble, I had to look up a little on hints to solve this, apparently one of the better approaches is to use recursion.
-While I do understand recursion and have used it in the past, I still haven't thought of a "good enough" approach. It feels as if my current skillset is not enough to solve this puzzle right now.
-I still created a new branch and deleted around 50% of the code in day07.cpp, to try and start a new, different approach. We'll see how it goes.
+### Update 29 May
+Forgot to update this. Managed to finish Day7 some days ago. It was a lot of trouble but in the end the fix wasn't that hard to implement. Have rested a little since then but it's getting time to start working again, need to start Day8 soon.
