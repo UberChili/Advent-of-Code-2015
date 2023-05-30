@@ -41,42 +41,54 @@ int get_total_sc(std::vector<std::string>& lines) {
 }
 
 
-int count_ocurrences(const std::string& str, const std::string& regexPattern) {
-    std::regex regexObj(regexPattern);
-    std::smatch match;
-    std::string::const_iterator searchStart(str.cbegin());
-    int count = 0;
+// int count_ocurrences(const std::string& str, const std::string& regexPattern) {
+//     std::regex regexObj(regexPattern);
+//     std::smatch match;
+//     std::string::const_iterator searchStart(str.cbegin());
+//     int count = 0;
 
-    while (std::regex_search(searchStart, str.cend(), match, regexObj)) {
-        count++;
-        searchStart = match.suffix().first;
-    }
+//     while (std::regex_search(searchStart, str.cend(), match, regexObj)) {
+//         count++;
+//         searchStart = match.suffix().first;
+//     }
 
-    return count;
-}
-
-
-int get_backslashes(std::string line) {
-    return count_ocurrences(line, "\\\\\\\\");
-}
+//     return count;
+// }
 
 
-int get_quotes(std::string line) {
-    return count_ocurrences(line, "\\\\\\\"") + 2;
-}
+// int get_backslashes(std::string line) {
+//     return count_ocurrences(line, "\\\\\\\\");
+// }
 
 
-int get_hexadecimals(std::string line) {
-    return count_ocurrences(line, "\\\\x[a-z0-9]{2}") * 3;
-}
+// int get_quotes(std::string line) {
+//     return count_ocurrences(line, "\\\\\\\"");
+// }
+
+
+// int get_hexadecimals(std::string line) {
+//     return (count_ocurrences(line, "\\\\x[0-9a-f]{2}") * 3);
+// }
 
 
 int get_characters_in_memory(std::string line) {
-    int count = (int) line.length();
-    count -= get_quotes(line);
-    count -= get_backslashes(line);
-    count -= get_hexadecimals(line);
-    return count;
+    int counter = 0;
+
+    for (int i = 0, len = (int) line.length(); i < len; i++) {
+        if (line[i] == '\\') {
+            if (line[i + 1] == '\\') {
+                i += 1;
+            }
+            else if (line[i + 1] == '"') {
+                i += 1;
+            }
+            else if (line[i + 1] == 'x') {
+                i += 3;
+            }
+        }
+        counter++;
+    }
+    return counter - 2;
 }
 
 
