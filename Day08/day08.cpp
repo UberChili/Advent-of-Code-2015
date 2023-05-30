@@ -92,12 +92,44 @@ int get_characters_in_memory(std::string line) {
 }
 
 
+int encode(std::string line) {
+    std::string out_str;
+
+    out_str.push_back('"');
+    for (int i = 0, len = (int) line.length(); i < len; i++) {
+        if (line[i] == '"') {
+            out_str.push_back('\\');
+        }
+        else if (line[i] == '\\') {
+            out_str.push_back('\\');
+        }
+        out_str.push_back(line[i]);
+    }
+    out_str.push_back('"');
+
+    std::cout << out_str << std::endl;
+    return (int) out_str.length();
+}
+
+
 int get_total_cm(std::vector<std::string>& lines) {
     int sum = 0;
 
     for (const auto& line : lines) {
         // std::cout << "SL: " << get_string_literals(line) << std::endl;
         sum += get_characters_in_memory(line);
+    }
+
+    return sum;
+}
+
+
+int get_total_encoded(std::vector<std::string>& lines) {
+    int sum = 0;
+
+    for (const auto& line : lines) {
+        // std::cout << "SL: " << get_string_literals(line) << std::endl;
+        sum += encode(line);
     }
 
     return sum;
@@ -122,15 +154,18 @@ int main(int argc, char *argv[]){
 
             std::cout << line << std::endl;
             std::cout << "SL: " << get_string_literals(line) << std::endl;
-            std::cout << "CM: " << get_characters_in_memory(line) << std::endl;
+            // std::cout << "CM: " << get_characters_in_memory(line) << std::endl;
+            std::cout << "Encoded: " << encode(line) << std::endl;
         }
         std::cout << "total number of characters of string code: " << get_total_sc(contents) << std::endl;
-        std::cout << "total number of characters in memory: " << get_total_cm(contents) << std::endl;
+        // std::cout << "total number of characters in memory: " << get_total_cm(contents) << std::endl;
 
         int total_sc = get_total_sc(contents);
-        int total_cm = get_total_cm(contents);
+        // int total_cm = get_total_cm(contents);
+        int total_encoded= get_total_encoded(contents);
 
-        std::cout << "Total SC: " << total_sc << " Total CM: " << total_cm << " Result: " << total_sc - total_cm << std::endl;
+        // std::cout << "Total SC: " << total_sc << " Total CM: " << total_cm << " Result: " << total_sc - total_cm << std::endl;
+        std::cout << "Total SC: " << total_sc << " Total Encoded: " << total_encoded << " Result: " << total_encoded - total_sc << std::endl;
 
         input.close();
     }
