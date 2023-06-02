@@ -51,7 +51,26 @@ bool contains_element(std::vector<std::string> str_vec, std::string search) {
 
 void build_map(std::unordered_map<std::string, std::string>& map, std::vector<std::string> line) {
     if (!map.contains(line.front())) {
+        map[line.front()] = line.at(2);
     }
+    if (!map.contains(line.at(2))) {
+        map[line.at(2)] = line.front();
+    }
+}
+
+bool search(std::unordered_map<std::string, std::vector<std::string>> graph, std::string name) {
+    std::deque<std::string> search_queue;
+    std::vector<std::string> searched;
+    search_queue.insert(search_queue.end(), graph[name].begin(), graph[name].end());
+
+    while (!search_queue.empty()) {
+        std::string location = search_queue.front();
+        search_queue.pop_front();
+        if (!contains_element(searched, location)) {
+        }
+    }
+
+    return false;
 }
 
 
