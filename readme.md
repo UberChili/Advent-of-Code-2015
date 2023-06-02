@@ -7,5 +7,5 @@ I still try to solve as many as I can because it is fun and it is a good tool fo
 
 So because I am but a C++ newbie, and not a particularly exceptional programmer, code in here could be ugly, unoptimized or at sometimes, just dumb. Please be understanding.
 
-### Update 29 May
-Forgot to update this. Managed to finish Day7 some days ago. It was a lot of trouble but in the end the fix wasn't that hard to implement. Have rested a little since then but it's getting time to start working again, need to start Day8 soon.
+### Update 31 May
+Finished Day8. At first, it seemed even harder than day7, which took me more than two weeks; but after two (or three?) days trying and a few reimplementations, I managed to find the correct solutions for Day8. Now moving on to Day9....
