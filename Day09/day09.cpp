@@ -1,4 +1,5 @@
 #include <cstring>
+#include <deque>
 #include <iostream>
 #include <fstream>
 #include <regex>
@@ -48,9 +49,9 @@ bool contains_element(std::vector<std::string> str_vec, std::string search) {
 }
 
 
-void build_map(std::unordered_map<std::string, std::vector<std::string>>& map, std::vector<std::string> line) {
-
-
+void build_map(std::unordered_map<std::string, std::string>& map, std::vector<std::string> line) {
+    if (!map.contains(line.front())) {
+    }
 }
 
 
@@ -67,7 +68,7 @@ int main(int argc, char *argv[]){
         std::string line;
 
         std::vector<std::string> splitted_line;
-        std::unordered_map<std::string, std::vector<std::string>> locations;
+        std::unordered_map<std::string, std::string> locations;
 
         while (std::getline(input, line)) {
             // std::cout << line << std::endl;
