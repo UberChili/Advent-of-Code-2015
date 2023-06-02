@@ -12,6 +12,7 @@ using std::istringstream;
 
 
 // Data structure to store locations and their neighbors
+// Probably won't even be needing this, keeping it, for now
 struct node {
     std::pair<std::string, std::string> neighbors_pair;
     int distance;
@@ -39,8 +40,16 @@ node make_node(std::vector<std::string> line) {
 }
 
 
+// Checks vector of strings for a 'search'. Returns true if search exists in the vector
+bool contains_element(std::vector<std::string> str_vec, std::string search) {
+    if (std::find(str_vec.begin(), str_vec.end(), search) != str_vec.end())
+        return true;
+    return false;
+}
+
+
 void build_map(std::unordered_map<std::string, std::vector<std::string>>& map, std::vector<std::string> line) {
-    node neighbors = make_node(line);
+
 
 }
 
