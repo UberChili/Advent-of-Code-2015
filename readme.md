@@ -7,5 +7,5 @@ I still try to solve as many as I can because it is fun and it is a good tool fo
 
 So because I am but a C++ newbie, and not a particularly exceptional programmer, code in here could be ugly, unoptimized or at sometimes, just dumb. Please be understanding.
 
-### Update 31 May
-Finished Day8. At first, it seemed even harder than day7, which took me more than two weeks; but after two (or three?) days trying and a few reimplementations, I managed to find the correct solutions for Day8. Now moving on to Day9....
+### Update 02 Jun
+Managed to do some actual progress on Day9. Learned to properly build the graph. I think this probably won't be that hard but for now I should call it a day and relax a little. Will continue tomorrow
