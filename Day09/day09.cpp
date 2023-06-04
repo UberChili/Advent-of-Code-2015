@@ -48,14 +48,6 @@ void update_map(std::unordered_map<std::string, location>& map, std::vector<std:
 }
 
 
-void dijkstra(std::unordered_map<std::string, location> map, std::string start) {
-
-    for (const auto& [key, value] : map) {
-    }
-
-}
-
-
 int main(int argc, char *argv[]){
     if (argc != 2) {
         std::cout << "Usage: ./day09 [input]\n";
