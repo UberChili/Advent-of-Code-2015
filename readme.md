@@ -7,5 +7,6 @@ I still try to solve as many as I can because it is fun and it is a good tool fo
 
 So because I am but a C++ newbie, and not a particularly exceptional programmer, code in here could be ugly, unoptimized or at sometimes, just dumb. Please be understanding.
 
-### Update 02 Jun
-Managed to do some actual progress on Day9. Learned to properly build the graph. I think this probably won't be that hard but for now I should call it a day and relax a little. Will continue tomorrow
+### Update 05 Jun (Working on Day9)
+This turned out to be way harder than I initially thought of. Currently trying to implement a bruteforce solution. Can't.
+This might be the point where I'm filtered by AoC 2015. We'll see...
