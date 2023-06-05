@@ -54,19 +54,35 @@ std::string get_cheapest(std::unordered_map<std::string, int> map) {
 
 
 void printpath(std::unordered_map<std::string, std::unordered_map<std::string, int>> graph, std::string start) {
-    // std::deque<std::string> search_queue;
-    int total = 0;
+    std::deque<std::string> search_queue;
     std::vector<std::string> searched;
-    searched.push_back(start);
+    int total = 0;
 
-    for (const auto& [key, val] : graph) {
-        std::cout << key << ": \n";
-        std::string current = get_cheapest(val);
+    search_queue.insert(search_queue.end(), start);
+
+    while (!search_queue.empty()) {
+        std::string current = search_queue.front();
+        search_queue.pop_front();
         if (!contains_element(searched, current)) {
-            total += graph[key][current];
-            searched.push_back(current);
+            std::string cheapest = get_cheapest(graph[current]);
+            if (!contains_element(searched, cheapest)) {
+                total += graph[current][cheapest];
+                searched.push_back(cheapest);
+            }
+            else {
+                search_queue.insert(search_queue.end(), cheapest);
+            }
         }
     }
+
+    // for (const auto& [key, val] : graph) {
+    //     std::cout << key << ": \n";
+    //     std::string current = get_cheapest(val);
+    //     if (!contains_element(searched, current)) {
+    //         total += graph[key][current];
+    //         searched.push_back(current);
+    //     }
+    // }
 
     std::cout << "\nRoute: \n";
     for (const auto& i : searched) {
