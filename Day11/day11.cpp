@@ -29,15 +29,17 @@ bool contains_element(std::vector<std::string> str_vec, std::string search) {
 
 void increment(std::string str) {
     std::string result;
-    char curr;
+    // char curr;
 
     for (int i = (int) str.length() - 1; i >= 0; i--) {
-        // std::cout << str[i] + 1 << std::endl;
-        curr = str[i] + 1;
-        result.insert(result.begin(), curr);
-        // result.push_back(curr);
+        // curr = str[i] + 1;
+        // result.insert(result.begin(), curr);
+        if (str[i] + 1 == 123) {
+            str[i] = 97;
+        }
     }
-    std::cout << result << std::endl;
+    // std::cout << result << std::endl;
+    std::cout << str << std::endl;
 }
 
 int main(int argc, char *argv[]){
